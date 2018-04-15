@@ -1,18 +1,18 @@
 <?xml version="1.0"?>
 <package >
   <metadata minClientVersion="2.8.1">
-    <id>Plugin.FirebasePushNotification</id>
-    <version>2.3.0</version>
-    <title>Firebase Push Notification Plugin for Xamarin</title>
+    <id>Birdie.Plugin.FirebasePushNotification</id>
+    <version>2.3.1</version>
+    <title>Firebase Push Notification Plugin for Xamarin (fork)</title>
     <authors>Rendy Del Rosario</authors>
-    <owners>crossgeeks rdelrosario</owners>
+    <owners>itoledo crossgeeks rdelrosario</owners>
     <licenseUrl>https://raw.githubusercontent.com/CrossGeeks/FirebasePushNotificationPlugin/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/CrossGeeks/FirebasePushNotificationPlugin</projectUrl>
     <iconUrl>https://github.com/CrossGeeks/FirebasePushNotificationPlugin/blob/master/art/icon.png?raw=true</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Receive and handle firebase push notifications across Xamarin.iOS and Xamarin.Android</description>
     <summary>Receive and handle firebase push notifications across Xamarin.iOS and Xamarin.Android</summary>
-    <releaseNotes>On demand registration, persistent token, better error handling and other minor fixes</releaseNotes>
+    <releaseNotes>Updated to latest Android Support and Google Play Services</releaseNotes>
     <copyright>Copyright 2017</copyright>
     <tags>iOS,Android,firebase,push notifications,cloud messaging,pcl,xamarin,plugins,xam.pcl</tags>
     <dependencies>
@@ -20,13 +20,13 @@
            <dependency id="NETStandard.Library" version="1.6.1" />
          </group>
         <group targetFramework="MonoAndroid80">
-            <dependency id="Xamarin.Firebase.Messaging" version="[60.1142.0]" />
-            <dependency id="Xamarin.Build.Download" version="0.4.7" />
-            <dependency id="Xamarin.Android.Support.v4" version="26.0.2" />
+            <dependency id="Xamarin.Firebase.Messaging" version="[60.1142.1]" />
+            <dependency id="Xamarin.Build.Download" version="0.4.9" />
+            <dependency id="Xamarin.Android.Support.v4" version="27.0.2" />
         </group>
         <group targetFramework="Xamarin.iOS10">
-            <dependency id="Xamarin.Firebase.iOS.CloudMessaging" version="2.0.4.1" />
-            <dependency id="Xamarin.Build.Download" version="0.4.7" />
+            <dependency id="Xamarin.Firebase.iOS.CloudMessaging" version="2.0.8" />
+            <dependency id="Xamarin.Build.Download" version="0.4.9" />
         </group>
     </dependencies>
   </metadata>
