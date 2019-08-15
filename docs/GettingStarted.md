@@ -77,6 +77,17 @@ Example of initialization:
         public override void OnCreate()
         {
             base.OnCreate();
+	    
+	    //Set the default notification channel for your app when running Android Oreo
+	    if (Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.O)
+	    {
+		 //Change for your default notification channel id here
+	         FirebasePushNotificationManager.DefaultNotificationChannelId = "FirebasePushNotificationChannel";
+
+		 //Change for your default notification channel name here
+		 FirebasePushNotificationManager.DefaultNotificationChannelName = "General";
+	    }
+
             
             //If debug you should reset the token each time.
             #if DEBUG
@@ -92,15 +103,7 @@ Example of initialization:
 
               };
 
-			//Set the default notification channel for your app when running Android Oreo
-            if (Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.O)
-            {
-                //Change for your default notification channel id here
-                FirebasePushNotificationManager.DefaultNotificationChannelId = "DefaultChannel";
-
-                //Change for your default notification channel name here
-                FirebasePushNotificationManager.DefaultNotificationChannelName = "General";
-            }
+		
          }
     }
 
@@ -158,6 +161,7 @@ Add FirebaseAppDelegateProxyEnabled in the app’s Info.plist file and set it to
 
 ![Disable Swizzling](https://github.com/CrossGeeks/FirebasePushNotificationPlugin/blob/master/images/iOS-disable-swizzling.png?raw=true)
 
+
 ### iOS Initialization
 
 There are 3 overrides to **FirebasePushNotificationManager.Initialize**:
@@ -202,18 +206,8 @@ Also should override these methods and make the following calls:
             FirebasePushNotificationManager.DidReceiveMessage(userInfo);
             // Do your magic to handle the notification data
             System.Console.WriteLine(userInfo);
-        }
 
-        public override void OnActivated(UIApplication uiApplication)
-        {
-            FirebasePushNotificationManager.Connect();
-           
-        }
-        public override void DidEnterBackground(UIApplication application)
-        {
-            // Use this method to release shared resources, save user data, invalidate timers and store the application state.
-            // If your application supports background exection this method is called instead of WillTerminate when the user quits.
-            FirebasePushNotificationManager.Disconnect();
+			completionHandler (UIBackgroundFetchResult.NewData);
         }
 ```
 
@@ -300,9 +294,26 @@ Push message opened event usage sample:
                     System.Diagnostics.Debug.WriteLine($"{data.Key} : {data.Value}");
                 }
 
+             
+ };
+```
+
+Push message action tapped event usage sample:
+**OnNotificationAction**
+```csharp
+  
+  CrossFirebasePushNotification.Current.OnNotificationAction += (s,p) =>
+  {
+                System.Diagnostics.Debug.WriteLine("Action");
+           
                 if(!string.IsNullOrEmpty(p.Identifier))
                 {
                     System.Diagnostics.Debug.WriteLine($"ActionId: {p.Identifier}");
+				    foreach(var data in p.Data)
+					{
+						System.Diagnostics.Debug.WriteLine($"{data.Key} : {data.Value}");
+					}
+
                 }
              
  };
