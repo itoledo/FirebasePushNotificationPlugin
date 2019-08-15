@@ -20,16 +20,16 @@
            <dependency id="NETStandard.Library" version="1.6.1" />
          </group>
         <group targetFramework="MonoAndroid80">
-            <dependency id="Xamarin.Firebase.Messaging" version="[60.1142.1]" />
-            <dependency id="Xamarin.Android.Support.v4" version="26.0.2" />
+            <dependency id="Xamarin.Firebase.Messaging" version="[71.1740.0]" />
+            <dependency id="Xamarin.Android.Support.v4" version="28.0.0.1" />
         </group>
         <group targetFramework="MonoAndroid81">
-          <dependency id="Xamarin.Firebase.Messaging" version="[60.1142.1]" />
-          <dependency id="Xamarin.Android.Support.v4" version="26.0.2" />
+          <dependency id="Xamarin.Firebase.Messaging" version="[71.1740.0]" />
+          <dependency id="Xamarin.Android.Support.v4" version="28.0.0.1" />
         </group>
         <group targetFramework="MonoAndroid90">
-          <dependency id="Xamarin.Firebase.Messaging" version="[60.1142.1]" />
-          <dependency id="Xamarin.Android.Support.v4" version="26.0.2" />
+          <dependency id="Xamarin.Firebase.Messaging" version="[71.1740.0]" />
+          <dependency id="Xamarin.Android.Support.v4" version="28.0.0.1" />
         </group>
         <group targetFramework="Xamarin.iOS10">
             <dependency id="Xamarin.Firebase.iOS.CloudMessaging" version="3.1.2" />
