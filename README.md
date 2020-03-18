@@ -1,9 +1,12 @@
 ## Firebase Push Notification Plugin for Xamarin iOS and Android
+
 Simple cross platform plugin for handling firebase push notifications.
+
+[![Build Status](https://dev.azure.com/CrossGeeks/Plugins/_apis/build/status/FirebasePushNotification%20Plugin%20CI%20Pipeline?branchName=master)](https://dev.azure.com/CrossGeeks/Plugins/_build/latest?definitionId=8&branchName=master)
 
 ### Setup
 * Available on NuGet: http://www.nuget.org/packages/Plugin.FirebasePushNotification [![NuGet](https://img.shields.io/nuget/v/Plugin.FirebasePushNotification.svg?label=NuGet)](https://www.nuget.org/packages/Plugin.FirebasePushNotification/)
-* Install into your PCL project and Client projects.
+* Install into your .NETStandard project and Client projects.
 
 **Platform Support**
 
@@ -14,7 +17,7 @@ Simple cross platform plugin for handling firebase push notifications.
 
 ### API Usage
 
-Call **CrossFirebasePushNotification.Current** from any project or PCL to gain access to APIs.
+Call **CrossFirebasePushNotification.Current** from any project to gain access to APIs.
 
 ## Features
 
@@ -52,3 +55,4 @@ Here you will find detailed documentation on setting up and using the Firebase P
 * [Tymen Steur](https://github.com/TymenSteur)
 * [Jonatan Rinckus](https://github.com/JonatanRinckus)
 * [Daniel-Jay Pascual](https://github.com/djrpascu)
+* [db2222](https://github.com/db2222)

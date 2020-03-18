@@ -9,7 +9,6 @@ using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
-using Plugin.FirebasePushNotification.Abstractions;
 using Android.Media;
 using Android.Support.V4.App;
 using System.Collections.ObjectModel;
@@ -68,6 +67,21 @@ namespace Plugin.FirebasePushNotification
         public const string CategoryKey = "category";
 
         /// <summary>
+        /// Notification Category
+        /// </summary>
+        public const string NotificationCategoryKey = "notification_category";
+
+        /// <summary>
+        /// Full Intent
+        /// </summary>
+        public const string UseFullIntentKey = "use_full_intent";
+
+        /// <summary>
+        /// OnGoing
+        /// </summary>
+        public const string OnGoingKey = "ongoing";
+
+        /// <summary>
         /// Silent
         /// </summary>
         public const string SilentKey = "silent";
@@ -111,14 +125,14 @@ namespace Plugin.FirebasePushNotification
         /// <summary>
         /// Channel id
         /// </summary>
-        public const string ChannelIdKey = "android_channel_id";
+        public const string ChannelIdKey = "channel_id";
 
-        public void OnOpened(NotificationResponse response)
+        public virtual void OnOpened(NotificationResponse response)
         {
             System.Diagnostics.Debug.WriteLine($"{DomainTag} - OnOpened");
         }
 
-        public void OnReceived(IDictionary<string, object> parameters)
+        public virtual void OnReceived(IDictionary<string, object> parameters)
         {
             System.Diagnostics.Debug.WriteLine($"{DomainTag} - OnReceived");
 
@@ -277,6 +291,19 @@ namespace Plugin.FirebasePushNotification
                  .SetAutoCancel(true)
                  .SetContentIntent(pendingIntent);
 
+            if (FirebasePushNotificationManager.LargeIconResource > 0)
+            {
+                try
+                {
+                    var largeIcon = BitmapFactory.DecodeResource(context.Resources, FirebasePushNotificationManager.LargeIconResource);
+                    notificationBuilder.SetLargeIcon(largeIcon);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                }
+            }
+
             var deleteIntent = new Intent(context,typeof(PushNotificationDeletedReceiver));
             var pendingDeleteIntent = PendingIntent.GetBroadcast(context, requestCode, deleteIntent, PendingIntentFlags.CancelCurrent);
             notificationBuilder.SetDeleteIntent(pendingDeleteIntent);
@@ -291,25 +318,25 @@ namespace Plugin.FirebasePushNotification
                         switch (priorityValue.ToLower())
                         {
                             case "max":
-                                notificationBuilder.SetPriority((int)Android.App.NotificationPriority.Max);
+                                notificationBuilder.SetPriority(NotificationCompat.PriorityMax);
                                 notificationBuilder.SetVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
                                 break;
                             case "high":
-                                notificationBuilder.SetPriority((int)Android.App.NotificationPriority.High);
+                                notificationBuilder.SetPriority(NotificationCompat.PriorityHigh);
                                 notificationBuilder.SetVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
                                 break;
                             case "default":
-                                notificationBuilder.SetPriority((int)Android.App.NotificationPriority.Default);
+                                notificationBuilder.SetPriority(NotificationCompat.PriorityDefault);
                                 notificationBuilder.SetVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
                                 break;
                             case "low":
-                                notificationBuilder.SetPriority((int)Android.App.NotificationPriority.Low);
+                                notificationBuilder.SetPriority(NotificationCompat.PriorityLow);
                                 break;
                             case "min":
-                                notificationBuilder.SetPriority((int)Android.App.NotificationPriority.Min);
+                                notificationBuilder.SetPriority(NotificationCompat.PriorityMin);
                                 break;
                             default:
-                                notificationBuilder.SetPriority((int)Android.App.NotificationPriority.Default);
+                                notificationBuilder.SetPriority(NotificationCompat.PriorityDefault);
                                 notificationBuilder.SetVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
                                 break;
                         }
@@ -415,6 +442,8 @@ namespace Plugin.FirebasePushNotification
 
             NotificationManager notificationManager = (NotificationManager)context.GetSystemService(Context.NotificationService);
             notificationManager.Notify(tag, notifyId, notificationBuilder.Build());
+
+            
  
         }
 
@@ -423,7 +452,7 @@ namespace Plugin.FirebasePushNotification
         /// </summary>
         /// <param name="notificationBuilder">Notification builder.</param>
         /// <param name="parameters">Parameters.</param>
-        private void ResolveLocalizedParameters(NotificationCompat.Builder notificationBuilder, IDictionary<string, object> parameters)
+        void ResolveLocalizedParameters(NotificationCompat.Builder notificationBuilder, IDictionary<string, object> parameters)
         {
             string getLocalizedString(string name, params string[] arguments)
             {
@@ -462,7 +491,7 @@ namespace Plugin.FirebasePushNotification
             }
         }
 
-        public void OnError(string error)
+        public virtual void OnError(string error)
         {
             System.Diagnostics.Debug.WriteLine($"{DomainTag} - OnError - {error}");
         }

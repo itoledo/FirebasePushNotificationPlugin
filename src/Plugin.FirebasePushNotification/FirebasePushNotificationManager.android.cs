@@ -1,4 +1,3 @@
-using Plugin.FirebasePushNotification.Abstractions;
 using System;
 using Firebase.Iid;
 using Firebase.Messaging;
@@ -13,15 +12,18 @@ using System.Threading;
 using Android.App;
 using Android.Content.PM;
 using Android.Graphics;
+using System.Threading.Tasks;
+using Java.Interop;
 
 namespace Plugin.FirebasePushNotification
 {
     /// <summary>
     /// Implementation for Feature
     /// </summary>
-    public class FirebasePushNotificationManager : IFirebasePushNotification
+    public class FirebasePushNotificationManager : Java.Lang.Object, IFirebasePushNotification, IOnCompleteListener
     {
         static NotificationResponse delayedNotificationResponse = null;
+        static TaskCompletionSource<string> _tokenTcs;
         internal const string KeyGroupName = "Plugin.FirebasePushNotification";
         internal const string FirebaseTopicsKey = "FirebaseTopicsKey";
         internal const string FirebaseTokenKey = "FirebaseTokenKey";
@@ -35,6 +37,7 @@ namespace Plugin.FirebasePushNotification
         public static string NotificationContentTextKey { get; set; }
         public static string NotificationContentDataKey { get; set; }
         public static int IconResource { get; set; }
+        public static int LargeIconResource { get; set; }
         public static Android.Net.Uri SoundUri { get; set; }
         public static Color? Color { get; set; }
         public static Type NotificationActivityType { get; set; }
@@ -42,68 +45,12 @@ namespace Plugin.FirebasePushNotification
 
         public static string DefaultNotificationChannelId{ get; set; } = "FirebasePushNotificationChannel";
         public static string DefaultNotificationChannelName { get; set; } = "General";
+        public static NotificationImportance DefaultNotificationChannelImportance { get; set; } = NotificationImportance.Default;
 
         internal static Type DefaultNotificationActivityType { get; set; } = null;
 
         //internal static PushNotificationActionReceiver ActionReceiver = new PushNotificationActionReceiver();
         
-
-        [Obsolete("ProcessIntent with these parameters is deprecated, please use the other override instead.")]
-        public static void ProcessIntent(Intent intent, bool enableDelayedResponse = true)
-        {
-            Bundle extras = intent?.Extras;
-            if (extras != null && !extras.IsEmpty)
-            {
-                var parameters = new Dictionary<string, object>();
-                foreach (var key in extras.KeySet())
-                {
-                    if (!parameters.ContainsKey(key) && extras.Get(key) != null)
-                        parameters.Add(key, $"{extras.Get(key)}");
-                }
-
-                if (parameters.Count > 0)
-                {
-                    NotificationManager manager = Application.Context.GetSystemService(Context.NotificationService) as NotificationManager;
-                    var notificationId = extras.GetInt(DefaultPushNotificationHandler.ActionNotificationIdKey, -1);
-                    if (notificationId != -1)
-                    {
-                        var notificationTag = extras.GetString(DefaultPushNotificationHandler.ActionNotificationTagKey, string.Empty);
-                        if (notificationTag == null)
-                            manager.Cancel(notificationId);
-                        else
-                            manager.Cancel(notificationTag,notificationId);
-                    }
-
-                    var response = new NotificationResponse(parameters, extras.GetString(DefaultPushNotificationHandler.ActionIdentifierKey, string.Empty));
-
-                    if (string.IsNullOrEmpty(response.Identifier))
-                    {
-                        if (_onNotificationOpened == null && enableDelayedResponse)
-                        {
-                            delayedNotificationResponse = response;
-                        }
-                        else 
-                        {
-                            _onNotificationOpened?.Invoke(CrossFirebasePushNotification.Current, new FirebasePushNotificationResponseEventArgs(response.Data, response.Identifier, response.Type));
-                        }
-                    }
-                    else
-                    {
-                        if (_onNotificationAction == null && enableDelayedResponse)
-                        {
-                            delayedNotificationResponse = response;
-                        }
-                        else
-                        {
-                            _onNotificationAction?.Invoke(CrossFirebasePushNotification.Current, new FirebasePushNotificationResponseEventArgs(response.Data, response.Identifier, response.Type));
-                        }
-                    }
-
-                    CrossFirebasePushNotification.Current.NotificationHandler?.OnOpened(response);
-                }
-             
-            }
-        }
         public static void ProcessIntent(Activity activity, Intent intent, bool enableDelayedResponse = true)
         {
             DefaultNotificationActivityType = activity.GetType();
@@ -166,8 +113,8 @@ namespace Plugin.FirebasePushNotification
         public static void Initialize(Context context, bool resetToken, bool createDefaultNotificationChannel = true,bool autoRegistration = true)
         {
             CrossFirebasePushNotification.Current.NotificationHandler = CrossFirebasePushNotification.Current.NotificationHandler ?? new DefaultPushNotificationHandler();
-
-            if(autoRegistration)
+            FirebaseMessaging.Instance.AutoInitEnabled = autoRegistration;
+            if (autoRegistration)
             {
                 ThreadPool.QueueUserWorkItem(state =>
                 {
@@ -221,7 +168,7 @@ namespace Plugin.FirebasePushNotification
                 NotificationManager notificationManager = (NotificationManager)context.GetSystemService(Context.NotificationService);
                 
                 notificationManager.CreateNotificationChannel(new NotificationChannel(channelId,
-                    channelName,NotificationImportance.Default));
+                    channelName,DefaultNotificationChannelImportance));
              }
 
              System.Diagnostics.Debug.WriteLine(CrossFirebasePushNotification.Current.Token);
@@ -249,11 +196,12 @@ namespace Plugin.FirebasePushNotification
 
            
         }
-        public async System.Threading.Tasks.Task RegisterForPushNotifications()
+        public void RegisterForPushNotifications()
         {
-            await System.Threading.Tasks.Task.Run(() =>
+            FirebaseMessaging.Instance.AutoInitEnabled = true;
+            System.Threading.Tasks.Task.Run(async() =>
             {
-                var token = FirebaseInstanceId.Instance.Token;
+                var token = await GetTokenAsync();
                 if (!string.IsNullOrEmpty(token))
                 {
 
@@ -262,8 +210,54 @@ namespace Plugin.FirebasePushNotification
             });
 
         }
+
+        public async Task<string> GetTokenAsync()
+        {
+
+            _tokenTcs = new TaskCompletionSource<string>();
+            FirebaseInstanceId.Instance.GetInstanceId().AddOnCompleteListener(this);
+
+            string retVal = null;
+
+            try
+            {
+                retVal = await _tokenTcs.Task;
+            }
+            catch (Exception ex)
+            {
+                _onNotificationError?.Invoke(CrossFirebasePushNotification.Current, new FirebasePushNotificationErrorEventArgs(FirebasePushNotificationErrorType.RegistrationFailed, $"{ex}"));
+            }
+
+            return retVal;
+
+
+        }
+
+        public void OnComplete(Android.Gms.Tasks.Task task)
+        {
+
+            try
+            {
+                if (task.IsSuccessful)
+                {
+                    string token = task.Result.JavaCast<IInstanceIdResult>().Token;
+                    _tokenTcs?.TrySetResult(token);
+                }
+                else
+                {
+                    _tokenTcs?.TrySetException(task.Exception);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _tokenTcs?.TrySetException(ex);
+            }
+        }
+
         public void UnregisterForPushNotifications()
         {
+            FirebaseMessaging.Instance.AutoInitEnabled = false;
             Reset();
         }
         static void CleanUp(bool clearAll = true)
@@ -503,6 +497,7 @@ namespace Plugin.FirebasePushNotification
         //Raises event for push notification token refresh
         internal static void RegisterToken(string token)
         {
+            SaveToken(token);
             _onTokenRefresh?.Invoke(CrossFirebasePushNotification.Current, new FirebasePushNotificationTokenEventArgs(token));
         }
         internal static void RegisterData(IDictionary<string,object> data)

@@ -1,8 +1,6 @@
-using Firebase.Analytics;
 using Firebase.CloudMessaging;
 using Firebase.InstanceID;
 using Foundation;
-using Plugin.FirebasePushNotification.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +18,6 @@ namespace Plugin.FirebasePushNotification
     public class FirebasePushNotificationManager : NSObject, IFirebasePushNotification, IUNUserNotificationCenterDelegate, IMessagingDelegate
     {
         public static UNNotificationPresentationOptions CurrentNotificationPresentationOption { get; set; } = UNNotificationPresentationOptions.None;
-        static NSObject messagingConnectionChangeNotificationToken;
         static Queue<Tuple<string, bool>> pendingTopics = new Queue<Tuple<string, bool>>();
         static bool hasToken = false;
         static NSString FirebaseTopicsKey = new NSString("FirebaseTopics");
@@ -133,16 +130,16 @@ namespace Plugin.FirebasePushNotification
 
         public IPushNotificationHandler NotificationHandler { get; set; }
         
-        public static async Task Initialize(NSDictionary options, bool autoRegistration = true)
+        public static void Initialize(NSDictionary options, bool autoRegistration = true)
         {
             if(App.DefaultInstance == null)
               App.Configure();
 
             CrossFirebasePushNotification.Current.NotificationHandler = CrossFirebasePushNotification.Current.NotificationHandler ?? new DefaultPushNotificationHandler();
-
+            Messaging.SharedInstance.AutoInitEnabled = autoRegistration;
             if(autoRegistration)
             {
-                await CrossFirebasePushNotification.Current.RegisterForPushNotifications();
+                CrossFirebasePushNotification.Current.RegisterForPushNotifications();
             }
       
 
@@ -155,15 +152,15 @@ namespace Plugin.FirebasePushNotification
             }*/
            
         }
-        public static async void Initialize(NSDictionary options, IPushNotificationHandler pushNotificationHandler, bool autoRegistration = true)
+        public static void  Initialize(NSDictionary options, IPushNotificationHandler pushNotificationHandler, bool autoRegistration = true)
         {
             CrossFirebasePushNotification.Current.NotificationHandler = pushNotificationHandler;
-            await Initialize(options, autoRegistration);
+            Initialize(options, autoRegistration);
         }
-        public static async void Initialize(NSDictionary options,NotificationUserCategory[] notificationUserCategories,bool autoRegistration = true)
+        public static void Initialize(NSDictionary options,NotificationUserCategory[] notificationUserCategories,bool autoRegistration = true)
         {
 
-            await Initialize(options, autoRegistration);
+            Initialize(options, autoRegistration);
 
             RegisterUserNotificationCategories(notificationUserCategories);
 
@@ -230,9 +227,10 @@ namespace Plugin.FirebasePushNotification
 
         }
 
-        public async Task RegisterForPushNotifications()
+        public void RegisterForPushNotifications()
         {
-            TaskCompletionSource<bool> permisionTask = new TaskCompletionSource<bool>();
+
+            Messaging.SharedInstance.AutoInitEnabled = true;
 
             Messaging.SharedInstance.Delegate = CrossFirebasePushNotification.Current as IMessagingDelegate;
 
@@ -253,9 +251,9 @@ namespace Plugin.FirebasePushNotification
                         _onNotificationError?.Invoke(CrossFirebasePushNotification.Current, new FirebasePushNotificationErrorEventArgs(FirebasePushNotificationErrorType.PermissionDenied, error.Description));
                     else if (!granted)
                         _onNotificationError?.Invoke(CrossFirebasePushNotification.Current, new FirebasePushNotificationErrorEventArgs(FirebasePushNotificationErrorType.PermissionDenied, "Push notification permission not granted"));
+                    else
+                        InvokeOnMainThread(() => UIApplication.SharedApplication.RegisterForRemoteNotifications());
 
-
-                    permisionTask.SetResult(granted);
                 });
                 
             }
@@ -266,21 +264,15 @@ namespace Plugin.FirebasePushNotification
                 var settings = UIUserNotificationSettings.GetSettingsForTypes(allNotificationTypes, null);
                 UIApplication.SharedApplication.RegisterUserNotificationSettings(settings);
 
-                permisionTask.SetResult(true);
-            }
-
-
-            var permissonGranted = await permisionTask.Task;
-
-            if (permissonGranted)
-            {
                 UIApplication.SharedApplication.RegisterForRemoteNotifications();
             }
+
         }
 
 
         public void UnregisterForPushNotifications()
         {
+        
             if (hasToken)
             {
                 CrossFirebasePushNotification.Current.UnsubscribeAll();
@@ -289,6 +281,7 @@ namespace Plugin.FirebasePushNotification
             // Disconnect();
              }
 
+            Messaging.SharedInstance.AutoInitEnabled = false;
             UIApplication.SharedApplication.UnregisterForRemoteNotifications();
             NSUserDefaults.StandardUserDefaults.SetString(string.Empty, FirebaseTokenKey);
             InstanceId.SharedInstance.DeleteId((h) => { });
@@ -559,7 +552,7 @@ namespace Plugin.FirebasePushNotification
                 UIApplication.SharedApplication.CancelAllLocalNotifications();
             }
         }
-        public async void RemoveNotification(string tag, int id)
+        public void RemoveNotification(string tag, int id)
         {
             RemoveNotification(id);
         }
@@ -588,6 +581,12 @@ namespace Plugin.FirebasePushNotification
                 }
 
             }
+        }
+
+        public async Task<string> GetTokenAsync()
+        {
+            var result=await InstanceId.SharedInstance.GetInstanceIdAsync();
+            return result?.Token;
         }
     }
 

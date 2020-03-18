@@ -60,8 +60,48 @@ namespace Plugin.FirebasePushNotification
                     parameters.Add(d.Key, d.Value);
             }
 
+            //Fix localization arguments parsing
+            string[] localizationKeys = new string[] { "title_loc_args", "body_loc_args" };
+            foreach (var locKey in localizationKeys)
+            {
+                if (parameters.ContainsKey(locKey) && parameters[locKey] is string parameterValue)
+                {
+                    if (parameterValue.StartsWith("[") && parameterValue.EndsWith("]") && parameterValue.Length > 2)
+                    {
+
+                        var arrayValues = parameterValue.Substring(1, parameterValue.Length - 2);
+                        parameters[locKey] = arrayValues.Split(',').Select(t => t.Trim()).ToArray();
+                    }
+                    else
+                    {
+                        parameters[locKey] = new string[] { };
+                    }
+                }
+            }
+
             FirebasePushNotificationManager.RegisterData(parameters);
             CrossFirebasePushNotification.Current.NotificationHandler?.OnReceived(parameters);
+        }
+
+        public override void OnNewToken(string p0)
+        {
+            // Get updated InstanceID token.
+            var refreshedToken = p0;
+
+            //Resubscribe to topics since the old instance id isn't valid anymore
+            //CrossFirebasePushNotification.Current.SubscribedTopics.
+            foreach (var t in CrossFirebasePushNotification.Current.SubscribedTopics)
+            {
+                FirebaseMessaging.Instance.SubscribeToTopic(t);
+            }
+
+            var editor = Android.App.Application.Context.GetSharedPreferences(FirebasePushNotificationManager.KeyGroupName, FileCreationMode.Private).Edit();
+            editor.PutString(FirebasePushNotificationManager.FirebaseTokenKey, refreshedToken);
+            editor.Commit();
+
+            // CrossFirebasePushNotification.Current.OnTokenRefresh?.Invoke(this,refreshedToken);
+            FirebasePushNotificationManager.RegisterToken(refreshedToken);
+            System.Diagnostics.Debug.WriteLine($"REFRESHED TOKEN: {refreshedToken}");
         }
 
         void ScheduleJob()
