@@ -7,7 +7,7 @@
     <AssemblyName>Plugin.FirebasePushNotification</AssemblyName>
     <RootNamespace>Plugin.FirebasePushNotification</RootNamespace>
 
-    <Product>$(AssemblyName) ($(TargetFramework))</Product>
+    <Product>Birdie.Plugin.FirebasePushNotification (netstandard1.0)</Product>
     <AssemblyVersion>3.0.0</AssemblyVersion>
     <AssemblyFileVersion>3.0.0</AssemblyFileVersion>
     <Version>3.0.0</Version>
@@ -28,7 +28,8 @@
     <PackageReleaseNotes>Android token registration error handling</PackageReleaseNotes>
     <Title>Firebase Push Notification Plugin for Xamarin iOS and Android</Title>
     <Summary>Receive and handle firebase push notifications across Xamarin.iOS and Xamarin.Android</Summary>
-    <Description>Receive and handle firebase push notifications across Xamarin.iOS and Xamarin.Android</Description>
+    <Description>Receive and handle firebase push notifications across Xamarin.iOS and Xamarin.Android.
+This is a fork from the original package with a couple of updates libraries.</Description>
     
 
     <Owners>crossgeeks,rdelrosario</Owners>
@@ -36,6 +37,7 @@
     <Copyright>Copyright 2017 CrossGeeks</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageId>Birdie.Plugin.FirebasePushNotification</PackageId>
   </PropertyGroup>
 
   <!-- Define what happens on build and release -->
