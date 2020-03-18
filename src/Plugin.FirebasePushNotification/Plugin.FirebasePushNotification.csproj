@@ -62,8 +62,8 @@
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.iOS')) ">
      <Compile Include="**\*.ios.cs" />
      <Compile Include="**\*.ios.*.cs" />
-     <PackageReference Include="Xamarin.Firebase.iOS.CloudMessaging" Version="4.1.1.1" />
-     <PackageReference Include="Xamarin.Firebase.iOS.InstanceID" Version="4.2.1" />
+     <PackageReference Include="Xamarin.Firebase.iOS.CloudMessaging" Version="4.1.1.2" />
+     <PackageReference Include="Xamarin.Firebase.iOS.InstanceID" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup Condition=" $(TargetFramework.StartsWith('MonoAndroid')) ">
